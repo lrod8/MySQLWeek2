@@ -1,0 +1,39 @@
+# 1. I want to know how many employees with each title were born after 1965-01-01.
+
+SELECT t.title AS "Title", count(t.emp_no) AS  "Employee Count"
+FROM titles t
+INNER JOIN employees e
+USING (emp_no)
+WHERE e.birth_date > "1965-01-01"
+GROUP BY t.title
+ORDER BY t.title;
+
+# 2. I want to know the average salary per title.
+
+SELECT t.title AS "Title", format(avg(s.salary), 2) AS "Average Salary"
+FROM titles t
+INNER JOIN salaries s
+USING (emp_no)
+GROUP BY t.title
+ORDER BY t.title;
+
+# 3. How much money was spent on salary for the marketing department between the years 1990 and 1992?
+
+SELECT de.emp_no AS "Employee Number", d.dept_name AS "Department", de.from_date AS "Dept From Date", de.to_date AS "Dept To Date", format(s.salary, 2) AS "Salary", 
+s.from_date AS "Salary From Date", s.to_date AS "Salary To Date", 
+format(IF(de.from_date >= s.from_date AND de.from_date <= s.to_date OR s.from_date >= de.from_date AND s.from_date <= de.to_date,
+IF(s.from_date >= de.from_date AND s.to_date <= de.to_date, DATEDIFF(s.to_date, s.from_date) * (s.salary / 365),
+IF(s.from_date = de.from_date AND s.to_date >= de.to_date, DATEDIFF(de.to_date, de.from_date) * (s.salary / 365), 
+IF(s.from_date > de.from_date AND s.to_date >= de.to_date, DATEDIFF(de.to_date, s.from_date) * (s.salary / 365),
+IF(s.from_date < de.from_date AND s.to_date >= de.to_date, DATEDIFF(de.to_date, de.from_date) * (s.salary / 365), 
+IF(s.from_date < de.from_date AND s.to_date < de.to_date, DATEDIFF(s.to_date, de.from_date) * (s.salary / 365),false))))),false), 2) AS "Adjusted Salary Expense"
+FROM dept_emp de
+INNER JOIN salaries s USING (emp_no)
+INNER JOIN departments d USING (dept_no)
+INNER JOIN employees e USING  (emp_no)
+WHERE de.dept_no = "d001" AND YEAR(de.from_date) > 1989 AND YEAR(de.to_date) < 1993
+ORDER BY s.emp_no;
+
+
+
+
